@@ -8,7 +8,7 @@
 
     If you are installing any additional libraries, please let the group know and put the library in the requirements.txt file.
 
-    Commit your work to the working-dev branch. Keep the main only for presentation day 
+    Before commiting your work to main. Let the team know about the changes
 
     Use your own branch and commit to the working-dev branch.
 
