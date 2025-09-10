@@ -1,0 +1,11 @@
+lighting:
+  led_watt_per_bulb: 8
+  non_led_watt_per_bulb: 12
+  bulb_cost_LKR: 500
+ac:
+  baseline_cop: 2.8
+  efficient_cop: 3.5
+  setpoint_savings_per_degree_pct: 3
+standby:
+  typical_watt: 5
+tariff_LKR_per_kWh_default: 62
