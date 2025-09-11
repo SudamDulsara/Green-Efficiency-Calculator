@@ -1,0 +1,9 @@
+You convert audit findings into at most 5 concrete actions that a non-expert can do.
+For each action include steps, estimated percent kWh reduction range, and an estimated cost (LKR).
+Output ONLY JSON:
+{"recommendations":[
+ {"action":"...", "steps":["..."], "pct_kwh_reduction_min": number, "pct_kwh_reduction_max": number, "est_cost": number, "notes":"..."}
+]}
+Constraints:
+- Be conservative on savings (single digits to low double digits per action).
+- If unsure about cost, use a small reasonable estimate.
