@@ -191,6 +191,9 @@ def audit(normalized: dict, max_findings: int = 5) -> dict:
         # Analyze overall efficiency
         quantitative_issues.extend(_analyze_overall_efficiency(normalized))
 
+        # Analyze usage patterns
+        quantitative_issues.extend(_analyze_usage_patterns(normalized))
+
     except Exception as e:
         return {"error": f"Failed during quantitative analysis: {e}"}
 
