@@ -40,6 +40,39 @@ def _calculate_energy_intensity(normalized: dict) -> float:
         return 0
     return monthly_kwh / floor_area
 
+def _analyze_usage_patterns(normalized: dict) -> list:
+    """Analyze usage patterns for inefficiencies"""
+    issues = []
+
+    # Check AC usage patterns
+    ac_units = normalized.get("ac_units", [])
+    for i, ac in enumerate(ac_units):
+        hours_per_day = ac.get("hours_per_day", 0)
+        if hours_per_day > 18:  # >75% of day
+            issues.append({
+                "area": "operations",
+                "issue": f"AC unit {i+1} operates {hours_per_day}h/day (excessive)",
+                "severity": "high",
+                "reason": "Near-continuous AC operation suggests poor building envelope or controls",
+                "confidence": 0.8,
+                "estimated_kwh_impact": ac.get("watt", 0) * 6 / 1000  # 6 hours reduction potential
+            })
+
+    # Check lighting usage patterns
+    lighting = normalized.get("lighting", {})
+    lighting_hours = lighting.get("hours_per_day", 0)
+    if lighting_hours > 14:
+        issues.append({
+            "area": "operations",
+            "issue": f"Lights operate {lighting_hours}h/day (likely excessive)",
+            "severity": "med",
+            "reason": "Extended lighting suggests poor daylight utilization or lack of controls",
+            "confidence": 0.7,
+            "estimated_kwh_impact": lighting.get("watt_per_bulb", 0) * lighting.get("bulbs", 0) * 4 / 1000
+        })
+
+    return issues
+
 def _analyze_ac_efficiency(ac_units: list) -> list:
     """Analyze AC efficiency and return issues"""
     issues = []
