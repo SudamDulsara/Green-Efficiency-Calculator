@@ -67,7 +67,7 @@ This agentic AI system revolves around a workflow that uses multiple agents to p
      - Outputs a detailed impact analysis, including savings, costs, and a plan for action.
 
 ## 5. **`llm.py`**
-   - **Purpose**: Manages interactions with the OpenAI API (or a similar LLM provider) for processing system and user prompts.
+   - **Purpose**: Manages interactions with the OpenAI API for processing system and user prompts.
    - **Key Functions**:
      - `call_json()` and `call_text()`:
        - Used by other agents to send system and user prompts to the LLM.
