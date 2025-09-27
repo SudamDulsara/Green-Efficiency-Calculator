@@ -6,23 +6,20 @@ _client = None
 def _client_ok():
     global _client
     if _client is None:
-        # simple client; per-request timeouts are set on create()
         _client = OpenAI()
     return _client
 
 def _strip_markdown_fences(s: str) -> str:
     s = s.strip()
-    # Remove leading and trailing code fences like ```json ... ```
     if s.startswith("```"):
         s = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", s)
         s = re.sub(r"\s*```$", "", s)
     return s.strip()
 
 def _normalize_quotes(s: str) -> str:
-    # Normalize curly quotes to straight quotes to avoid parse errors inside strings
     return (
-        s.replace("\u201c", '"').replace("\u201d", '"')  # left/right double
-         .replace("\u2018", "'").replace("\u2019", "'")  # left/right single
+        s.replace("\u201c", '"').replace("\u201d", '"') 
+         .replace("\u2018", "'").replace("\u2019", "'") 
     )
 
 def _extract_balanced_json_object(s: str) -> str | None:
@@ -59,9 +56,7 @@ def _extract_balanced_json_object(s: str) -> str | None:
     return None
 
 def _post_clean_json_text(t: str) -> str:
-    # remove trailing commas before a } or ]
     t = re.sub(r",\s*([}\]])", r"\1", t)
-    # replace non-JSON tokens with null
     t = re.sub(r"\bNaN\b|\bInfinity\b|\b-?Inf\b", "null", t)
     return t
 
@@ -72,16 +67,13 @@ def _coerce_and_load_json(raw: str):
     - cleans trailing commas and odd tokens
     - then json.loads()
     """
-    # try strict first
     try:
         return json.loads(raw)
     except Exception:
         pass
 
-    # try balanced object extraction
     candidate = _extract_balanced_json_object(raw)
     if candidate is None:
-        # as a last attempt, try trimming to first/last braces naively
         start, end = raw.find("{"), raw.rfind("}")
         if start != -1 and end != -1 and end > start:
             candidate = raw[start:end + 1]
@@ -111,12 +103,11 @@ def call_json(system_prompt: str,
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        response_format={"type": "json_object"},  # ask server to enforce JSON
+        response_format={"type": "json_object"},
         timeout=timeout,
     )
     content = resp.choices[0].message.content or ""
 
-    # First try strict load; fallback to tolerant load with balanced braces
     try:
         return json.loads(content)
     except Exception:
