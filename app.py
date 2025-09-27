@@ -19,14 +19,14 @@ with st.form("input_form"):
 
         st.markdown("**Air Conditioning**")
         ac_count = st.number_input("Number of AC units", min_value=0, value=1, step=1)
-        ac_watt = st.number_input("Typical watt per AC unit (W)", min_value=0, value=1200, step=50)
+        ac_watt = st.number_input("Average watt per AC unit (W)", min_value=0, value=1200, step=50)
         ac_hours = st.number_input("AC hours per day", min_value=0.0, max_value=24.0, value=8.0, step=0.5)
         ac_star = st.slider("AC star rating", min_value=1, max_value=5, value=3)
 
     with col_right:
         st.subheader("Lighting")
         bulbs = st.number_input("Number of bulbs", min_value=0, value=20, step=1)
-        bulb_watt = st.number_input("Watt per bulb (W)", min_value=0, value=10, step=1)
+        bulb_watt = st.number_input("Average Watt per bulb (W)", min_value=0, value=10, step=1)
         bulb_hours = st.number_input("Lighting hours per day", min_value=0.0, max_value=24.0, value=6.0, step=0.5)
 
     st.markdown("---")
