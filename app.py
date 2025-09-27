@@ -11,6 +11,10 @@ st.title("🔋 Green Efficiency Assessment")
 defaults = yaml.safe_load(open("data/defaults.yaml", "r", encoding="utf-8"))
 tariff_default = float(defaults.get("tariff_LKR_per_kWh_default", 62))
 
+# api_key = st.sidebar.text_input("OpenAI API Key", type="password", value=os.getenv("OPENAI_API_KEY",""))
+# if api_key:
+#     os.environ["OPENAI_API_KEY"] = api_key
+
 with st.form("input_form"):
     col_left, col_right = st.columns(2)
     with col_left:
@@ -36,6 +40,8 @@ with st.form("input_form"):
         tariff = st.number_input("Tariff (LKR/kWh)", min_value=0.0, value=float(tariff_default), step=1.0)
     with ct2:
         monthly_kwh = st.number_input("Monthly consumption (kWh)", min_value=0.0, value=320.0, step=1.0)
+
+    # log_ok = st.checkbox("I consent to anonymous logging for quality & safety checks", value=False)
 
     submitted = st.form_submit_button("Run Analysis", width="stretch")
 
