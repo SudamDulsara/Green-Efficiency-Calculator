@@ -4,3 +4,5 @@ streamlit
 openai
 pydantic
 pyyaml
+fastapi
+uvicorn
