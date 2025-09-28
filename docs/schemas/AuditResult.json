@@ -1,0 +1,55 @@
+{
+  "$defs": {
+    "Finding": {
+      "properties": {
+        "area": {
+          "enum": [
+            "lighting",
+            "AC",
+            "standby",
+            "envelope",
+            "other"
+          ],
+          "title": "Area",
+          "type": "string"
+        },
+        "issue": {
+          "title": "Issue",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "med",
+            "high"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "area",
+        "issue",
+        "severity",
+        "reason"
+      ],
+      "title": "Finding",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "title": "Findings",
+      "type": "array"
+    }
+  },
+  "title": "AuditResult",
+  "type": "object"
+}

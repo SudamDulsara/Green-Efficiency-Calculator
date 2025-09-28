@@ -84,13 +84,28 @@ This agentic AI system revolves around a workflow that uses multiple agents to p
      - Used throughout the agents, especially in `intake_agent.py`, to clean and validate input data.
 
 ## 7. **`workflow.py`**
-   - **Purpose**: Orchestrates the workflow by initiating the process with normalized data.
+   - **Purpose**: Connects all agents into a complete analysis pipeline.
    - **Key Functions**:
      - `run_workflow(input_payload)`:
-       - Starts the process by normalizing the input data using `intake_agent.py`.
+       1. **Normalize data** → `intake_agent.normalize()`.
+       2. **Audit inefficiencies** → `efficiency_auditor.audit()`.
+       3. **Generate recommendations** → `recommendation_composer.compose_recs()`.
+       4. **Estimate impact** → `impact_estimator.estimate_impact()`.
+       5. Returns: `{ "input": ..., "findings": ..., "plan": ... }`.
    - **Flow**:
-     - The workflow begins by normalizing the input data.
-     - The processed data is then passed to other agents for auditing, recommendation composition, and impact estimation.
+     - Takes raw input, processes it through all agents, and returns structured results for the UI.
+
+## 8. **`app.py`**
+   - **Purpose**: Provides the **Streamlit-based UI** for the Green Efficiency Calculator.
+   - **Features**:
+     - User inputs building details (floor area, AC usage, lighting, tariff, etc.).
+     - API key input for LLM usage.
+     - Displays **Quick Wins** (top 3 recommended actions).
+     - Shows all actions in a structured **table** with cost, savings, and payback.
+     - Provides an **action plan** with download option (`.md`).
+   - **Flow**:
+     - Collects input → Calls `run_workflow()` → Displays results (metrics, tables, text plan).
+
 
 ## Overall Flow:
 1. **Input Payload**: The workflow begins by sending the raw input data (`input_payload`) to the `run_workflow()` function in `workflow.py`.
