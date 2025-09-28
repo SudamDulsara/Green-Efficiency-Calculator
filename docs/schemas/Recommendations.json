@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "Recommendation": {
+      "properties": {
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Steps",
+          "type": "array"
+        },
+        "pct_kwh_reduction_min": {
+          "title": "Pct Kwh Reduction Min",
+          "type": "number"
+        },
+        "pct_kwh_reduction_max": {
+          "title": "Pct Kwh Reduction Max",
+          "type": "number"
+        },
+        "est_cost": {
+          "title": "Est Cost",
+          "type": "number"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "",
+          "title": "Notes"
+        }
+      },
+      "required": [
+        "action",
+        "pct_kwh_reduction_min",
+        "pct_kwh_reduction_max",
+        "est_cost"
+      ],
+      "title": "Recommendation",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "recommendations": {
+      "items": {
+        "$ref": "#/$defs/Recommendation"
+      },
+      "title": "Recommendations",
+      "type": "array"
+    }
+  },
+  "title": "Recommendations",
+  "type": "object"
+}

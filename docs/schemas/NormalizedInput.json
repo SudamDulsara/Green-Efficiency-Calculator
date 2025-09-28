@@ -1,0 +1,81 @@
+{
+  "$defs": {
+    "ACUnit": {
+      "properties": {
+        "watt": {
+          "default": 0.0,
+          "title": "Watt",
+          "type": "number"
+        },
+        "hours_per_day": {
+          "default": 0.0,
+          "title": "Hours Per Day",
+          "type": "number"
+        },
+        "star_rating": {
+          "default": 0.0,
+          "title": "Star Rating",
+          "type": "number"
+        },
+        "count": {
+          "default": 0,
+          "title": "Count",
+          "type": "integer"
+        }
+      },
+      "title": "ACUnit",
+      "type": "object"
+    },
+    "Lighting": {
+      "properties": {
+        "bulbs": {
+          "default": 0,
+          "title": "Bulbs",
+          "type": "integer"
+        },
+        "watt_per_bulb": {
+          "default": 0.0,
+          "title": "Watt Per Bulb",
+          "type": "number"
+        },
+        "hours_per_day": {
+          "default": 0.0,
+          "title": "Hours Per Day",
+          "type": "number"
+        }
+      },
+      "title": "Lighting",
+      "type": "object"
+    }
+  },
+  "description": "Canonical input that flows between agents.",
+  "properties": {
+    "floor_area_m2": {
+      "default": 0.0,
+      "title": "Floor Area M2",
+      "type": "number"
+    },
+    "ac_units": {
+      "items": {
+        "$ref": "#/$defs/ACUnit"
+      },
+      "title": "Ac Units",
+      "type": "array"
+    },
+    "lighting": {
+      "$ref": "#/$defs/Lighting"
+    },
+    "tariff_LKR_per_kWh": {
+      "default": 0.0,
+      "title": "Tariff Lkr Per Kwh",
+      "type": "number"
+    },
+    "monthly_kWh": {
+      "default": 0.0,
+      "title": "Monthly Kwh",
+      "type": "number"
+    }
+  },
+  "title": "NormalizedInput",
+  "type": "object"
+}
