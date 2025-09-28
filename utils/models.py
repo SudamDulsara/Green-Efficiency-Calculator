@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Any, Dict
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 class ACUnit(BaseModel):
@@ -120,3 +120,14 @@ class ImpactPlan(BaseModel):
     totals: ImpactTotals
     plan_text: str
 
+#Api Specific Related Models
+class RawPayload(BaseModel):
+    payload: Dict[str, Any]
+
+class ComposeInput(BaseModel):
+    normalized: NormalizedInput
+    findings: AuditResult
+
+class EstimateInput(BaseModel):
+    normalized: NormalizedInput
+    recommendations: Recommendations
