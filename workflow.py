@@ -4,6 +4,7 @@ from agents.recommendation_composer import compose_recs#, _post_checks
 from agents.impact_estimator import estimate_impact
 
 from utils.models import (NormalizedInput, AuditResult, Recommendations, ImpactPlan)
+from utils.checks import consistency_checks
 
 
 def run_workflow(input_payload: dict) -> dict:
@@ -30,6 +31,9 @@ def run_workflow(input_payload: dict) -> dict:
 
     plan_dict = estimate_impact(data.model_dump(), recs.model_dump())
     plan = ImpactPlan.model_validate(plan_dict)
+
+    plan_fixed, flags = consistency_checks(data.model_dump(), plan.model_dump())
+    plan = ImpactPlan.model_validate(plan_fixed)
 
     return {
         "input": data.model_dump(),

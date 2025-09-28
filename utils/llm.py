@@ -1,6 +1,8 @@
 import os, json, re
 from openai import OpenAI
 
+from .json_tools import extract_json_block, try_json_loads
+
 _client = None
 
 def _client_ok():
@@ -16,82 +18,17 @@ def _strip_markdown_fences(s: str) -> str:
         s = re.sub(r"\s*```$", "", s)
     return s.strip()
 
-def _normalize_quotes(s: str) -> str:
-    return (
-        s.replace("\u201c", '"').replace("\u201d", '"') 
-         .replace("\u2018", "'").replace("\u2019", "'") 
-    )
-
-def _extract_balanced_json_object(s: str) -> str | None:
+def call_text(
+    *,
+    system_prompt: str,
+    user_prompt: str,
+    temperature: float = 0.0,
+    max_tokens: int = 1000,
+    timeout: int | None = None,
+    model: str | None = None,
+) -> str:
     """
-    Extract the first balanced top-level JSON object {...} accounting for strings/escapes.
-    """
-    s = _strip_markdown_fences(_normalize_quotes(s))
-
-    start = s.find("{")
-    if start < 0:
-        return None
-
-    depth = 0
-    in_str = False
-    esc = False
-    for i in range(start, len(s)):
-        ch = s[i]
-        if in_str:
-            if esc:
-                esc = False
-            elif ch == "\\":
-                esc = True
-            elif ch == '"':
-                in_str = False
-        else:
-            if ch == '"':
-                in_str = True
-            elif ch == "{":
-                depth += 1
-            elif ch == "}":
-                depth -= 1
-                if depth == 0:
-                    return s[start:i + 1]
-    return None
-
-def _post_clean_json_text(t: str) -> str:
-    t = re.sub(r",\s*([}\]])", r"\1", t)
-    t = re.sub(r"\bNaN\b|\bInfinity\b|\b-?Inf\b", "null", t)
-    return t
-
-def _coerce_and_load_json(raw: str):
-    """
-    Very tolerant loader:
-    - extracts the first balanced {...} block
-    - cleans trailing commas and odd tokens
-    - then json.loads()
-    """
-    try:
-        return json.loads(raw)
-    except Exception:
-        pass
-
-    candidate = _extract_balanced_json_object(raw)
-    if candidate is None:
-        start, end = raw.find("{"), raw.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            candidate = raw[start:end + 1]
-        else:
-            raise
-
-    candidate = _post_clean_json_text(candidate)
-    return json.loads(candidate)
-
-def call_json(system_prompt: str,
-              user_prompt: str,
-              model: str | None = None,
-              temperature: float = 0.0,
-              max_tokens: int = 400,
-              timeout: int = 12):
-    """
-    Strict JSON response with small output cap and short timeout.
-    Falls back to a tolerant JSON loader if the first parse fails.
+    Minimal chat call; returns message.content (string).
     """
     client = _client_ok()
     model = model or os.getenv("MODEL_NAME", "gpt-4o-mini")
@@ -103,39 +40,74 @@ def call_json(system_prompt: str,
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        response_format={"type": "json_object"},
         timeout=timeout,
     )
     content = resp.choices[0].message.content or ""
+    return content
 
-    try:
-        return json.loads(content)
-    except Exception:
-        try:
-            return _coerce_and_load_json(content)
-        except Exception as e:
-            snippet = content[:600].replace("\n", "\\n")
-            raise ValueError(f"Model returned non-JSON. Snippet: {snippet} ...") from e
+_JSON_REPAIR_SYSTEM = (
+    "You are a strict JSON repair assistant. Output ONLY valid JSON that obeys the schema keys and types. "
+    "No markdown, no comments."
+)
+_JSON_REPAIR_USER_TMPL = """The following was intended to be valid JSON, but it failed to parse.
+Return a corrected JSON that preserves the same intent.
 
-def call_text(system_prompt: str,
-              user_prompt: str,
-              model: str | None = None,
-              temperature: float = 0.0,
-              max_tokens: int = 400,
-              timeout: int = 12):
+RAW:
+```txt
+{bad}
+```"""
+
+def _repair_json_with_model(raw: str, *, temperature: float = 0.0, max_tokens: int = 1000, timeout: int | None = None, model: str | None = None) -> dict:
     """
-    Plain text response with small output cap and short timeout.
+    Ask the model to repair malformed JSON. This function lives here (not in json_tools)
+    to avoid circular imports.
     """
-    client = _client_ok()
-    model = model or os.getenv("MODEL_NAME", "gpt-4o-mini")
-    resp = client.chat.completions.create(
-        model=model,
+    candidate = extract_json_block(raw)
+    ok, data = try_json_loads(candidate)
+    if ok:
+        return data
+
+    repaired = call_text(
+        system_prompt=_JSON_REPAIR_SYSTEM,
+        user_prompt=_JSON_REPAIR_USER_TMPL.format(bad=raw),
         temperature=temperature,
         max_tokens=max_tokens,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
         timeout=timeout,
+        model=model,
     )
-    return resp.choices[0].message.content
+    repaired = extract_json_block(repaired)
+    return json.loads(repaired)
+
+def call_json(
+    system_prompt: str,
+    user_prompt: str,
+    *,
+    temperature: float = 0.0,
+    max_tokens: int = 1000,
+    timeout: int | None = None,
+    model: str | None = None,
+):
+    """
+    Call the LLM for JSON output.
+    - First attempt: parse the raw content directly
+    - On failure: try to repair using a second LLM call
+    """
+    raw = call_text(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        timeout=timeout,
+        model=model,
+    )
+    raw_clean = _strip_markdown_fences(raw)
+    try:
+        return json.loads(raw_clean)
+    except Exception:
+        return _repair_json_with_model(
+            raw_clean,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            model=model,
+        )

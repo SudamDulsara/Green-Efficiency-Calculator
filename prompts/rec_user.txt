@@ -1,0 +1,7 @@
+Given this normalized input and audit findings, propose up to 5 practical actions.
+
+Normalized:
+{{normalized_json}}
+
+Findings:
+{{findings_json}}
