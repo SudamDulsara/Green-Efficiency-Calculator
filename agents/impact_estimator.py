@@ -36,6 +36,7 @@ def _render_plan_text(normalized: dict, items: list, totals: dict) -> str:
     return "\n".join(lines)
 
 def estimate_impact(normalized: dict, recs: dict) -> dict:
+    
     """
     Convert recommendation % ranges to kWh and LKR savings and render a concise plan locally.
     Expected `recs` shape:
