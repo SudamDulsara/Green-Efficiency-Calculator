@@ -4,12 +4,12 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from workflow import run_workflow
-from auth_utils import login, signup, logout  # Firebase auth helpers
+from auth_utils import login, signup, logout  
 
-# Load environment variables
+
 load_dotenv()
 
-# --- Page config ---
+
 st.set_page_config(
     page_title="Green Efficiency Calculator",
     page_icon="🔋",
@@ -17,13 +17,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Authentication state ---
+
 if "user" not in st.session_state:
     st.session_state.user = None
 if "menu" not in st.session_state:
     st.session_state.menu = "Login"
 
-# Sidebar menu
+
 if st.session_state.user:
     menu = ["App", "Logout"]
 else:
@@ -31,9 +31,9 @@ else:
 
 choice = st.sidebar.selectbox("Menu", menu, index=menu.index(st.session_state.menu))
 
-# --- LOGIN PAGE ---
+
 if choice == "Login":
-    st.header("🔐 Welcome Back!")
+    st.header(" Welcome Back!")
     st.write("Login to track energy efficiency & save LKR!")
 
     email = st.text_input("Email")
@@ -49,9 +49,9 @@ if choice == "Login":
         else:
             st.error(user)
 
-# --- SIGNUP PAGE ---
+
 elif choice == "Sign Up":
-    st.header("📝 Create a New Account")
+    st.header(" Create a New Account")
     st.write("Sign up to start tracking energy efficiency!")
 
     email = st.text_input("Email")
@@ -66,18 +66,18 @@ elif choice == "Sign Up":
         else:
             st.error(user)
 
-# --- MAIN APP ---
+
 elif choice == "App":
     if not st.session_state.user:
         st.warning("Please login first.")
         st.stop()
 
-    # Sidebar user info
+ 
     st.sidebar.write(f"Hello, {st.session_state.user['email'].split('@')[0]}!")
 
     st.title("🔋 Green Efficiency Assessment")
 
-    # Load defaults
+   
     defaults = yaml.safe_load(open("data/defaults.yaml", "r", encoding="utf-8"))
     tariff_default = float(defaults.get("tariff_LKR_per_kWh_default", 62))
 
