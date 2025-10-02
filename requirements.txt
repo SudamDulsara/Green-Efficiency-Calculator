@@ -6,3 +6,4 @@ pydantic
 pyyaml
 fastapi
 uvicorn
+pyrebase4
