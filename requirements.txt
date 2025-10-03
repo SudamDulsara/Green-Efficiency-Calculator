@@ -4,3 +4,6 @@ streamlit
 openai
 pydantic
 pyyaml
+fastapi
+uvicorn
+pyrebase4

@@ -1,0 +1,91 @@
+{
+  "$defs": {
+    "ImpactAction": {
+      "properties": {
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "kWh_saved_per_month": {
+          "title": "Kwh Saved Per Month",
+          "type": "number"
+        },
+        "LKR_saved_per_month": {
+          "title": "Lkr Saved Per Month",
+          "type": "number"
+        },
+        "est_cost": {
+          "title": "Est Cost",
+          "type": "number"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "",
+          "title": "Notes"
+        }
+      },
+      "required": [
+        "action",
+        "kWh_saved_per_month",
+        "LKR_saved_per_month",
+        "est_cost"
+      ],
+      "title": "ImpactAction",
+      "type": "object"
+    },
+    "ImpactTotals": {
+      "properties": {
+        "kWh_saved_per_month": {
+          "title": "Kwh Saved Per Month",
+          "type": "number"
+        },
+        "LKR_saved_per_month": {
+          "title": "Lkr Saved Per Month",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kWh_saved_per_month",
+        "LKR_saved_per_month"
+      ],
+      "title": "ImpactTotals",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "quick_wins": {
+      "items": {
+        "$ref": "#/$defs/ImpactAction"
+      },
+      "title": "Quick Wins",
+      "type": "array"
+    },
+    "all_actions": {
+      "items": {
+        "$ref": "#/$defs/ImpactAction"
+      },
+      "title": "All Actions",
+      "type": "array"
+    },
+    "totals": {
+      "$ref": "#/$defs/ImpactTotals"
+    },
+    "plan_text": {
+      "title": "Plan Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "totals",
+    "plan_text"
+  ],
+  "title": "ImpactPlan",
+  "type": "object"
+}
