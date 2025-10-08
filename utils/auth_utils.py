@@ -1,5 +1,5 @@
 import streamlit as st
-from firebase_config import auth
+from utils.firebase_config import auth
 
 def signup(email, password):
     try:

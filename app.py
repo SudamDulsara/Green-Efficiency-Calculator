@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from workflow import run_workflow
-from auth_utils import login, signup, logout  
+from utils.auth_utils import login, signup, logout  
 
 
 load_dotenv()
