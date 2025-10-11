@@ -9,3 +9,9 @@ ac:
 standby:
   typical_watt: 5
 tariff_LKR_per_kWh_default: 62
+emission_factor_kg_per_kwh: 0.6
+disruption_order:
+  - none
+  - low
+  - medium
+  - high

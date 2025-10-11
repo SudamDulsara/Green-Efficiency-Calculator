@@ -1,21 +1,25 @@
-"""
-Exports JSON Schemas for the I/O contracts into docs/schemas/*.json
-Run: python scripts/export_schema.py
-"""
-import json, os
+from __future__ import annotations
+import json
 from pathlib import Path
-from utils.models import NormalizedInput, AuditResult, Recommendations, ImpactPlan
 
-out_dir = Path("docs/schemas")
-out_dir.mkdir(parents=True, exist_ok=True)
+from utils.models import (NormalizedInput, AuditResult, Recommendations, ImpactPlan, RawPayload, ComposeInput, EstimateInput,)
 
-def dump(model, name):
+OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "schemas"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+def _dump(model, name: str):
     schema = model.model_json_schema()
-    (out_dir / f"{name}.json").write_text(json.dumps(schema, indent=2), encoding="utf-8")
-    print("Wrote", out_dir / f"{name}.json")
+    (OUT_DIR / f"{name}.json").write_text(json.dumps(schema, indent=2), encoding="utf-8")
 
-dump(NormalizedInput, "NormalizedInput")
-dump(AuditResult, "AuditResult")
-dump(Recommendations, "Recommendations")
-dump(ImpactPlan, "ImpactPlan")
-print("Done.")
+def main():
+    _dump(RawPayload, "RawPayload")
+    _dump(NormalizedInput, "NormalizedInput")
+    _dump(AuditResult, "AuditResult")
+    _dump(ComposeInput, "ComposeInput")
+    _dump(Recommendations, "Recommendations")
+    _dump(EstimateInput, "EstimateInput")
+    _dump(ImpactPlan, "ImpactPlan")
+    print(f"Wrote schemas to {OUT_DIR}")
+
+if __name__ == "__main__":
+    main()
