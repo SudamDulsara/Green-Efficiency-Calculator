@@ -122,6 +122,20 @@ elif choice == "App":
             with st.spinner("Analyzing…"):
                 result = run_workflow(payload)
 
+
+            # --- Show Audit Findings (from efficiency auditor) ---
+            findings = result.get("findings", {})
+            if findings and "findings" in findings:
+                st.subheader("Audit Findings (Energy Inefficiencies)")
+                findings_list = findings["findings"]
+                if findings_list:
+                    findings_df = pd.DataFrame(findings_list)
+                    st.dataframe(findings_df, use_container_width=True)
+                    with st.expander("Show raw findings JSON"):
+                        st.json(findings)
+                else:
+                    st.info("No inefficiencies found by the auditor.")
+
             plan = result["plan"]
 
             st.subheader("Top 3 Quick Wins")

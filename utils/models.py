@@ -52,6 +52,7 @@ class Finding(BaseModel):
             "building_shell": "envelope",
             "shell": "envelope",
             "other": "other",
+            "operations": "other",
         }
         return area_map.get(s, v)
 
