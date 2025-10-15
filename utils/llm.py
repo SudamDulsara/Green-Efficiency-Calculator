@@ -1,141 +1,73 @@
-import os, json, re
+from __future__ import annotations
+import json
+import os
+import re
+from typing import Any, Dict, Optional
 from openai import OpenAI
+from dotenv import load_dotenv
 
-_client = None
+load_dotenv()
 
-def _client_ok():
-    global _client
-    if _client is None:
-        _client = OpenAI()
-    return _client
+_CLIENT: Optional["OpenAI"] = None
 
-def _strip_markdown_fences(s: str) -> str:
-    s = s.strip()
-    if s.startswith("```"):
-        s = re.sub(r"^```[a-zA-Z0-9_-]*\s*", "", s)
-        s = re.sub(r"\s*```$", "", s)
-    return s.strip()
 
-def _normalize_quotes(s: str) -> str:
-    return (
-        s.replace("\u201c", '"').replace("\u201d", '"') 
-         .replace("\u2018", "'").replace("\u2019", "'") 
-    )
+def _client() -> "OpenAI":
+    global _CLIENT
+    if _CLIENT is not None:
+        return _CLIENT
+    if OpenAI is None:
+        raise RuntimeError("openai package not installed. Add `openai>=1.50.0` to requirements.txt")
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is missing. Add it to your .env")
+    _CLIENT = OpenAI(api_key=api_key)
+    return _CLIENT
 
-def _extract_balanced_json_object(s: str) -> str | None:
-    """
-    Extract the first balanced top-level JSON object {...} accounting for strings/escapes.
-    """
-    s = _strip_markdown_fences(_normalize_quotes(s))
 
-    start = s.find("{")
-    if start < 0:
-        return None
+def _model_name() -> str:
+    return os.getenv("MODEL_NAME", "gpt-4o-mini")
 
-    depth = 0
-    in_str = False
-    esc = False
-    for i in range(start, len(s)):
-        ch = s[i]
-        if in_str:
-            if esc:
-                esc = False
-            elif ch == "\\":
-                esc = True
-            elif ch == '"':
-                in_str = False
-        else:
-            if ch == '"':
-                in_str = True
-            elif ch == "{":
-                depth += 1
-            elif ch == "}":
-                depth -= 1
-                if depth == 0:
-                    return s[start:i + 1]
-    return None
 
-def _post_clean_json_text(t: str) -> str:
-    t = re.sub(r",\s*([}\]])", r"\1", t)
-    t = re.sub(r"\bNaN\b|\bInfinity\b|\b-?Inf\b", "null", t)
-    return t
+_FENCE_RE = re.compile(r"^\s*```(?:json)?\s*([\s\S]*?)\s*```\s*$", re.IGNORECASE)
 
-def _coerce_and_load_json(raw: str):
-    """
-    Very tolerant loader:
-    - extracts the first balanced {...} block
-    - cleans trailing commas and odd tokens
-    - then json.loads()
-    """
-    try:
-        return json.loads(raw)
-    except Exception:
-        pass
 
-    candidate = _extract_balanced_json_object(raw)
-    if candidate is None:
-        start, end = raw.find("{"), raw.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            candidate = raw[start:end + 1]
-        else:
-            raise
+def _strip_fences(s: str) -> str:
+    m = _FENCE_RE.match(s)
+    return m.group(1) if m else s
 
-    candidate = _post_clean_json_text(candidate)
-    return json.loads(candidate)
 
-def call_json(system_prompt: str,
-              user_prompt: str,
-              model: str | None = None,
-              temperature: float = 0.0,
-              max_tokens: int = 400,
-              timeout: int = 12):
-    """
-    Strict JSON response with small output cap and short timeout.
-    Falls back to a tolerant JSON loader if the first parse fails.
-    """
-    client = _client_ok()
-    model = model or os.getenv("MODEL_NAME", "gpt-4o-mini")
-    resp = client.chat.completions.create(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        response_format={"type": "json_object"},
-        timeout=timeout,
-    )
-    content = resp.choices[0].message.content or ""
+def _json_repair(s: str) -> str:
+    s = re.sub(r",(\s*[}\]])", r"\1", s)
+    first = s.find("{")
+    last = s.rfind("}")
+    if first != -1 and last != -1 and last > first:
+        s = s[first : last + 1]
+    return s
+
+
+def call_json(system_text: str, user_content: Any) -> Dict[str, Any]:
 
     try:
-        return json.loads(content)
-    except Exception:
+        client = _client()
+        model = _model_name()
+
+        msg = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_text},
+                {"role": "user", "content": json.dumps(user_content, ensure_ascii=False)},
+            ],
+            temperature=0.2,
+        )
+
+        text = (msg.choices[0].message.content or "").strip()
+        payload = text
+
+        payload = _strip_fences(payload)
         try:
-            return _coerce_and_load_json(content)
-        except Exception as e:
-            snippet = content[:600].replace("\n", "\\n")
-            raise ValueError(f"Model returned non-JSON. Snippet: {snippet} ...") from e
-
-def call_text(system_prompt: str,
-              user_prompt: str,
-              model: str | None = None,
-              temperature: float = 0.0,
-              max_tokens: int = 400,
-              timeout: int = 12):
-    """
-    Plain text response with small output cap and short timeout.
-    """
-    client = _client_ok()
-    model = model or os.getenv("MODEL_NAME", "gpt-4o-mini")
-    resp = client.chat.completions.create(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        timeout=timeout,
-    )
-    return resp.choices[0].message.content
+            return json.loads(payload)
+        except Exception:
+            repaired = _json_repair(payload)
+            return json.loads(repaired)
+    except Exception:
+        return {}

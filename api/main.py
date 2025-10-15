@@ -1,70 +1,76 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from __future__ import annotations
 from typing import Any, Dict
-from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
-from agents.intake_agent import normalize
-from agents.efficiency_auditor import audit
-from agents.recommendation_composer import compose_recs
-from agents.impact_estimator import estimate_impact
-from utils.models import (NormalizedInput, AuditResult, Recommendations, ImpactPlan, RawPayload, ComposeInput, EstimateInput)
+from utils.models import (RawPayload, ComposeInput, EstimateInput, NormalizedInput, AuditResult, Recommendations, ImpactPlan,)
+from agents import intake_agent, efficiency_auditor, recommendation_composer, impact_estimator
 from workflow import run_workflow
 
-
-load_dotenv()
-
 app = FastAPI(
-    title="Green Efficiency Calculator APIs",
-    version="1.0.0",
-    description="Public endpoints exposing the agent workflow and their contracts."
+    title="Green Efficiency Calculator API",
+    version="1.1.0",
+    description=(
+        "Energy efficiency pipeline (normalize → audit → compose → estimate). "
+        "Now supports policy/goal inputs: target_budget_LKR, payback_threshold_months, "
+        "co2_reduction_goal_pct, max_disruption."
+    ),
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 @app.get("/")
 def root():
     return RedirectResponse(url="/docs")
 
-# @app.get("/")
-# def root():
-#     return {
-#         "service": "Green Efficiency Calculator API",
-#         "docs": "/docs",
-#         "health": "/healthz",
-#         "endpoints": ["/v1/normalize","/v1/audit","/v1/compose","/v1/estimate","/v1/run"]
-#     }
 
 @app.get("/healthz")
 def healthz():
     return {"status": "ok"}
 
-@app.post("/v1/normalize", response_model=NormalizedInput)
-def normalize_endpoint(req: RawPayload):
-    out = normalize(req.payload)
-    return NormalizedInput.model_validate(out)
+@app.post(
+    "/v1/normalize",
+    response_model=NormalizedInput,
+    summary="Normalize raw payload into canonical NormalizedInput (includes optional `policy`).",
+)
+def v1_normalize(req: RawPayload) -> NormalizedInput:
+    normalized_dict = intake_agent.normalize(req.payload or {})
+    return NormalizedInput(**normalized_dict)
 
-@app.post("/v1/audit", response_model=AuditResult)
-def audit_endpoint(req: NormalizedInput):
-    out = audit(req.model_dump())
-    return AuditResult.model_validate(out)
 
-@app.post("/v1/compose", response_model=Recommendations)
-def compose_endpoint(req: ComposeInput):
-    out = compose_recs(req.normalized.model_dump(), req.findings.model_dump())
-    return Recommendations.model_validate(out)
+@app.post(
+    "/v1/audit",
+    response_model=AuditResult,
+    summary="Run quantitative/qualitative audit on a NormalizedInput.",
+)
+def v1_audit(body: NormalizedInput) -> AuditResult:
+    res = efficiency_auditor.audit(body)
+    return res if isinstance(res, AuditResult) else AuditResult(**res)
 
-@app.post("/v1/estimate", response_model=ImpactPlan)
-def estimate_endpoint(req: EstimateInput):
-    out = estimate_impact(req.normalized.model_dump(), req.recommendations.model_dump())
-    return ImpactPlan.model_validate(out)
 
-@app.post("/v1/run", response_model=Dict[str, Any])
-def run_endpoint(req: RawPayload):
-    return run_workflow(req.payload)
+@app.post(
+    "/v1/compose",
+    response_model=Recommendations,
+    summary="Compose recommendations under policy constraints (prompt + deterministic filtering).",
+)
+def v1_compose(body: ComposeInput) -> Recommendations:
+    recs = recommendation_composer.compose_recommendations(body.normalized, body.findings)
+    return recs if isinstance(recs, Recommendations) else Recommendations(**recs)
+
+
+@app.post(
+    "/v1/estimate",
+    response_model=ImpactPlan,
+    summary="Estimate monthly kWh/LKR/CO₂ impact (adds quick wins and CO₂ goal check).",
+)
+def v1_estimate(body: EstimateInput) -> ImpactPlan:
+    plan = impact_estimator.estimate_impact(body.normalized, body.recommendations)
+    return plan if isinstance(plan, ImpactPlan) else ImpactPlan(**plan)
+
+
+@app.post(
+    "/v1/run",
+    response_model=Dict[str, Any],
+    summary="End-to-end: raw payload → normalize → audit → compose → estimate.",
+)
+def v1_run(req: RawPayload) -> Dict[str, Any]:
+    return run_workflow(req.payload or {})
