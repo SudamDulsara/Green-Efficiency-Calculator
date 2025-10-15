@@ -124,6 +124,6 @@ def estimate_impact(normalized: NormalizedInput, recs: Recommendations) -> Impac
         all_actions=actions,
         totals=totals,
         plan_text=plan_text,
-        policy=normalized.policy,  # echo for traceability
+        policy=normalized.policy,
     )
     return plan

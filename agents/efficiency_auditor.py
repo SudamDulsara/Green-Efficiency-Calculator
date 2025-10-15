@@ -6,7 +6,6 @@ from utils.guardrails import clamp
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "auditor_system.txt"
 
-# Sri Lankan energy efficiency benchmarks
 BENCHMARKS = {
     "energy_intensity": {
         "excellent": 8,   # kWh/m²/month
