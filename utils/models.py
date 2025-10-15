@@ -183,6 +183,23 @@ class ImpactPlan(BaseModel):
     plan_text: str
     policy: Optional[PolicyGoals] = None
 
+class PlannerAttempt(BaseModel):
+    attempt: int
+    plan: Dict[str, Any]
+    ok: bool
+    reason: str
+
+class PlannerEnvelope(BaseModel):
+    planner_trace: List[PlannerAttempt]
+    final: Dict[str, Any]
+
+class PlannerCriteria(BaseModel):
+    max_budget_LKR: Optional[float] = None
+    payback_threshold_months: Optional[float] = None
+    require_data_complete: bool = False
+    co2_reduction_goal_pct: Optional[float] = None
+    max_disruption: Optional[str] = None
+    
 #Api Specific Related Models
 class RawPayload(BaseModel):
     payload: Dict[str, Any]
