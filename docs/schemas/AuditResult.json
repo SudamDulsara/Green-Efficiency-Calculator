@@ -3,13 +3,7 @@
     "Finding": {
       "properties": {
         "area": {
-          "enum": [
-            "lighting",
-            "AC",
-            "standby",
-            "envelope",
-            "other"
-          ],
+          "enum": ["lighting", "AC", "standby", "envelope", "other"],
           "title": "Area",
           "type": "string"
         },
@@ -18,11 +12,7 @@
           "type": "string"
         },
         "severity": {
-          "enum": [
-            "low",
-            "med",
-            "high"
-          ],
+          "enum": ["low", "med", "high"],
           "title": "Severity",
           "type": "string"
         },
@@ -31,12 +21,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "area",
-        "issue",
-        "severity",
-        "reason"
-      ],
+      "required": ["area", "issue", "severity", "reason"],
       "title": "Finding",
       "type": "object"
     }
