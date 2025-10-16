@@ -3,6 +3,7 @@ from typing import List, Literal, Optional, Any, Dict
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 DisruptionLevel = Literal["none", "low", "medium", "high"]
+SCHEMA_VERSION_ACTION: Literal["1.0.0"] = "1.0.0"
 
 class PolicyGoals(BaseModel):
     """
@@ -64,6 +65,13 @@ class NormalizedInput(BaseModel):
     tariff_LKR_per_kWh: float = 0.0
     monthly_kWh: float = 0.0
     policy: Optional[PolicyGoals] = None
+
+    tariff_per_kwh: Optional[float] = Field(
+        default=None, description="Currency per kWh used for OPEX derivations."
+    )
+    grid_kg_per_kwh: Optional[float] = Field(
+        default=None, description="Grid emission factor (kg CO2e per kWh)."
+    )
 
 
 class Finding(BaseModel):
@@ -174,7 +182,28 @@ class ImpactTotals(BaseModel):
     LKR_saved_per_month: float
     co2_kg_saved_per_month: float = Field(default=0.0, ge=0)
 
+class StructuredAction(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,
+        frozen=False,
+    )
 
+    schema_version: Literal["1.0.0"] = Field(
+        default=SCHEMA_VERSION_ACTION,
+        description="Schema version for compatibility and migrations."
+    )
+    action: str = Field(..., min_length=1, description="Human-readable action label.")
+    capex: float = Field(..., ge=0, description="One-time capital expenditure.")
+    opex_change: float = Field(
+        ...,
+        description="Annual operating expense delta; negative means savings."
+    )
+    annual_kWh_saved: float = Field(..., ge=0, description="Annual electricity saved.")
+    CO2e_saved: float = Field(..., ge=0, description="Annual emissions avoided (kg CO2e).")
+    payback_months: float = Field(..., gt=0, description="Simple payback (months).")
+    confidence: float = Field(..., ge=0, le=1, description="0..1 confidence score.")
+    
 class ImpactPlan(BaseModel):
     model_config = ConfigDict(extra="ignore")
     quick_wins: List[ImpactAction] = Field(default_factory=list)
@@ -182,6 +211,14 @@ class ImpactPlan(BaseModel):
     totals: ImpactTotals
     plan_text: str
     policy: Optional[PolicyGoals] = None
+    actions_structured: Optional[List[StructuredAction]] = Field(
+        default=None,
+        description="Validated, machine-operable actions adhering to the strict schema."
+    )
+    actions_invalid_issues: Optional[List[str]] = Field(
+        default=None,
+        description="Human-readable list of row-scoped validation issues (if any)."
+    )
 
 class PlannerAttempt(BaseModel):
     attempt: int
@@ -199,7 +236,7 @@ class PlannerCriteria(BaseModel):
     require_data_complete: bool = False
     co2_reduction_goal_pct: Optional[float] = None
     max_disruption: Optional[str] = None
-    
+
 #Api Specific Related Models
 class RawPayload(BaseModel):
     payload: Dict[str, Any]

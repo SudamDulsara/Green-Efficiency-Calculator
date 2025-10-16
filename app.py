@@ -3,8 +3,11 @@ import yaml
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
+
 from workflow import run_workflow
 from utils.auth_utils import login, signup, logout
+from utils.autofix import AutoFixContext
+from utils.validation import validate_actions_report
 
 load_dotenv()
 
@@ -80,6 +83,27 @@ elif choice == "App":
     except Exception:
         defaults = {}
     tariff_default = float(defaults.get("tariff_LKR_per_kWh_default", 62))
+
+    st.sidebar.header("Derivation context")
+    tariff = st.sidebar.number_input(
+        "Tariff (currency per kWh)",
+        min_value=0.0,
+        value=0.20,
+        step=0.01,
+        help="Used to derive opex_change when missing: -(annual_kWh_saved × tariff).",
+    )
+    grid_factor = st.sidebar.number_input(
+        "Grid factor (kg CO₂e per kWh)",
+        min_value=0.0,
+        value=0.70,
+        step=0.01,
+        help="Used to derive CO2e_saved when missing: annual_kWh_saved × grid_factor.",
+    )
+
+    st.session_state["autofix_ctx"] = AutoFixContext(
+        tariff_per_kwh=float(tariff),
+        grid_kg_per_kwh=float(grid_factor),
+    )
 
     with st.form("input_form"):
         col_left, col_right = st.columns(2)
@@ -180,7 +204,6 @@ elif choice == "App":
             plan = result.get("plan", {})
             totals = plan.get("totals", {}) or {}
 
-            # --- Show Audit Findings (from efficiency auditor) ---
             findings = result.get("findings", {})
             if findings and "findings" in findings:
                 st.subheader("Audit Findings (Energy Inefficiencies)")
@@ -267,3 +290,61 @@ elif choice == "App":
                 file_name="action_plan.md",
                 mime="text/markdown",
             )
+
+            ctx = st.session_state.get("autofix_ctx")
+            strict_mode = st.toggle(
+                "Strict mode (no auto-fixes)",
+                value=False,
+                help="When ON, derived fields are NOT auto-filled. When OFF, we infer opex_change, CO₂e_saved, and payback_months where possible.",
+            )
+
+            raw_actions = plan.get("actions", []) or []
+            if not raw_actions:
+                legacy = plan.get("all_actions", []) or []
+                raw_actions = []
+                for a in legacy:
+                    try:
+                        kwh_pm = float(a.get("kWh_saved_per_month", 0.0) or 0.0)
+                        lkr_pm = a.get("LKR_saved_per_month", None)
+                        raw_actions.append(
+                            {
+                                "action": a.get("action", "") or "Unnamed action",
+                                "capex": float(a.get("est_cost", 0.0) or 0.0),
+                                "annual_kWh_saved": kwh_pm * 12.0,
+                                "opex_change": -(float(lkr_pm) * 12.0) if lkr_pm not in (None, "") else None,
+                                "CO2e_saved": float(a.get("co2_kg_saved_per_month", 0.0) or 0.0) * 12.0,
+                                "payback_months": float(a.get("payback_months", 0.0) or 0.0) or None,
+                                "confidence": float(a.get("confidence", 0.7)),
+                            }
+                        )
+                    except Exception:
+                        continue
+
+            report = validate_actions_report(raw_actions, ctx=ctx, strict=strict_mode)
+
+            if report.issues:
+                st.warning("Some rows failed validation. Valid rows are shown below; expand to see issues per row.")
+                with st.expander("Show validation issues"):
+                    for iss in report.issues:
+                        st.write(f"- Row {iss.row_index + 1} · **{iss.field}**: {iss.message}")
+
+            structured = report.objects
+            notes = report.notes_per_row
+            st.session_state["structured_actions"] = structured
+            st.session_state["structured_notes"] = notes
+
+            st.subheader("Structured actions (validated)")
+            if structured:
+                s_df = pd.DataFrame([s.model_dump() for s in structured])
+                st.dataframe(s_df, use_container_width=True)
+            else:
+                st.info("No valid structured actions to display.")
+
+            with st.expander("Auto-fix notes per row"):
+                for i, ns in enumerate(notes):
+                    if ns:
+                        st.markdown(f"**Row {i+1}:**")
+                        for n in ns:
+                            st.write("- " + str(n))
+                    else:
+                        st.write(f"**Row {i+1}:** (no fixes)")
