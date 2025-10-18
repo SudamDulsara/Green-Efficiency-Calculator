@@ -184,12 +184,18 @@ if "user" not in st.session_state:
 if "menu" not in st.session_state:
     st.session_state.menu = "Login"
 
+if "flash" not in st.session_state:
+    st.session_state.flash = None
 st.markdown("""
             <div class="main-header" style="text-align:center;">
                 <h1>⚡ Green Efficiency</h1>
                 <p>Smart Energy Management for a Sustainable Future</p>
             </div>
         """, unsafe_allow_html=True)
+if st.session_state.flash:
+    st.success(st.session_state.flash)
+    st.session_state.flash = None
+
 
 
 menu = ["App"] if st.session_state.user else ["Login", "Sign Up"]
@@ -207,7 +213,7 @@ if choice == "Login":
             user = login(email, password)
             if isinstance(user, dict):
                 st.session_state.user = user
-                st.success("Logged in successfully! Redirecting to app...")
+                st.session_state.flash = "Logged in successfully! Redirecting to app…"
                 st.session_state.menu = "App"
                 st.rerun()
             else:
@@ -225,7 +231,7 @@ elif choice == "Sign Up":
         if st.button("Sign Up", use_container_width=True):
             user = signup(email, password)
             if isinstance(user, dict):
-                st.success("Account created! Please login.")
+                st.session_state.flash = "Account created! Please log in."
                 st.session_state.menu = "Login"
                 st.rerun()
             else:
