@@ -20,7 +20,156 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-st.markdown("""
+LIGHT_CSS = """
+<style>
+/* ---------- Base & Typography ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+* { font-family: 'Inter', sans-serif; }
+#MainMenu, footer, header { visibility: hidden; }
+
+:root{
+  --bg: #f7fafc;
+  --panel: #ffffff;
+  --panel-border: #e5e7eb;
+  --ink: #0f172a;
+  --muted: #475569;
+  --brand: #16a34a;
+  --brand-2: #22c55e;
+  --brand-soft: #eaf9f0;
+  --shadow: 0 6px 20px rgba(2, 6, 23, .06);
+}
+
+.stApp{
+  background: radial-gradient(1200px 600px at 15% -10%, #ffffff, var(--bg)) fixed;
+}
+.main .block-container{ padding-top:2rem; padding-bottom:3rem; max-width:1400px; }
+
+/* Header */
+.main-header{
+  background: linear-gradient(135deg, #f4fff7 0%, #dffbe9 50%, #ecfff3 100%);
+  padding: 3rem 2rem; border-radius:20px; color:var(--ink); margin-bottom:2rem;
+  box-shadow: var(--shadow); position:relative; overflow:hidden; border:1px solid #d1fae5;
+}
+.main-header::before{
+  content:''; position:absolute; top:-40%; right:-35%; width:90%; height:190%;
+  background: radial-gradient(circle, rgba(34,197,94,.15) 0%, transparent 60%);
+  animation:pulse 5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.08);opacity:.9} }
+.main-header h1{ color:#065f46 !important; font-size:2.5rem; font-weight:700; margin-bottom:.5rem; position:relative; z-index:1; }
+.main-header p{ color:#0f5132; font-size:1.05rem; position:relative; z-index:1; }
+
+/* Titles */
+.section-title{
+  color:var(--brand); font-size:1.6rem; font-weight:700; margin:2rem 0 1rem 0;
+  padding-bottom:.6rem; border-bottom:3px solid var(--brand);
+}
+.subsection-title{
+  color:#0f172a; font-size:1.05rem; font-weight:700; margin:1.25rem 0 .75rem 0;
+  padding-left:1rem; border-left:4px solid var(--brand);
+}
+
+/* Cards */
+.energy-card{
+  background:var(--panel); padding:1.5rem 1.75rem; border-radius:16px;
+  border:1px solid var(--panel-border); margin-bottom:1.25rem; box-shadow:var(--shadow);
+}
+
+/* Metrics */
+.metric-card{
+  background:linear-gradient(135deg, #eaf9f0 0%, #defce9 100%);
+  padding:1.25rem; border-radius:14px; text-align:center; box-shadow:var(--shadow);
+  transition:transform .25s ease, box-shadow .25s ease; border:1px solid #d1fae5;
+}
+.metric-card:hover{ transform:translateY(-3px); box-shadow:0 10px 24px rgba(22,163,74,.18); }
+.metric-value{ font-size:2rem; font-weight:800; color:#065f46; margin-bottom:.15rem; }
+.metric-label{ color:#0f5132; font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+.metric-sublabel{ color:#166534; font-size:.75rem; }
+
+/* Inputs */
+.stNumberInput > div > div > input,
+.stTextInput   > div > div > input{
+  background:#ffffff !important; border:2px solid #d1d5db !important; border-radius:10px !important;
+  color:var(--ink) !important; padding:.75rem !important; transition:all .2s ease;
+}
+.stNumberInput > div > div > input:focus,
+.stTextInput   > div > div > input:focus{
+  border-color:var(--brand) !important; box-shadow:0 0 0 3px rgba(34,197,94,.20) !important;
+}
+.stNumberInput label, .stTextInput label, .stSelectbox label, .stSlider label{
+  color:var(--ink) !important; font-weight:600 !important; font-size:.95rem !important;
+}
+.stSelectbox > div > div{
+  background:#ffffff !important; border:2px solid #d1d5db !important; border-radius:10px !important; color:var(--ink) !important;
+}
+.stSelectbox > div > div:focus-within{ border-color:var(--brand) !important; box-shadow:0 0 0 3px rgba(34,197,94,.20) !important; }
+.stSlider > div > div > div{ background:#e5e7eb !important; }
+.stSlider > div > div > div > div{ background:var(--brand) !important; }
+
+/* Buttons */
+.stButton > button, .stFormSubmitButton > button{
+  background:linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%) !important;
+  color:#fff !important; border:none !important; border-radius:12px !important;
+  padding:.9rem 2rem !important; font-weight:800 !important; font-size:1rem !important;
+  transition:transform .2s ease, box-shadow .2s ease !important; box-shadow:0 8px 18px rgba(34,197,94,.28) !important;
+}
+.stFormSubmitButton > button{ width:100% !important; font-size:1.1rem !important; margin-top:.6rem !important; }
+.stButton > button:hover, .stFormSubmitButton > button:hover{ transform:translateY(-2px) !important; }
+
+/* Expanders */
+.streamlit-expanderHeader{
+  background:#ffffff !important; border-radius:10px !important; border:1px solid var(--panel-border) !important;
+  font-weight:700 !important; color:var(--ink) !important;
+}
+.streamlit-expanderHeader:hover{ background:#f8fafc !important; border-color:#cbd5e1 !important; }
+.streamlit-expanderContent{
+  background:#ffffff !important; border:1px solid var(--panel-border) !important; border-top:none !important; color:var(--ink) !important;
+}
+
+/* Alerts */
+.stAlert{ background:#ffffff !important; border-radius:10px !important; border-left:4px solid var(--brand) !important; color:var(--ink) !important; }
+.stSuccess{ background:#f0fdf4 !important; border-left-color:var(--brand) !important; }
+.stWarning{ background:#fffbeb !important; border-left-color:#f59e0b !important; }
+.stError{   background:#fef2f2 !important; border-left-color:#ef4444 !important; }
+
+/* Download button */
+.download-btn{
+  display:inline-block; margin-top:1rem; text-decoration:none; background:#ffffff; color:var(--brand);
+  border:2px solid var(--brand); border-radius:10px; padding:.65rem 1.25rem; font-weight:700; transition:all .2s ease;
+}
+.download-btn:hover{ background:var(--brand); color:#fff; transform:translateY(-1px); }
+
+/* Text */
+.stMarkdown, p{ color:#334155; }
+h1,h2,h3,h4,h5,h6{ color:var(--ink) !important; }
+
+/* Actions table */
+.actions-table-container{ overflow-x:auto; border-radius:12px; box-shadow:var(--shadow); }
+.actions-table{ width:100%; border-collapse:collapse; background:#ffffff; border-radius:12px; overflow:hidden; }
+.actions-table thead{ background:linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%); }
+.actions-table th{
+  padding:1rem; text-align:left; color:#ffffff; font-weight:700; font-size:.85rem;
+  text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid rgba(255,255,255,.25);
+}
+.actions-table td{ padding:1rem; border-bottom:1px solid #eef2f7; color:#111827; font-size:.95rem; }
+.actions-table tbody tr{ transition:background .15s ease; }
+.actions-table tbody tr:hover{ background:#f8fafc; }
+.action-name-cell{ font-weight:700; color:#065f46; font-size:1rem; }
+.action-value-cell{ font-weight:600; color:#0f172a; }
+
+/* Badges */
+.disruption-badge{ display:inline-block; padding:.4rem .75rem; border-radius:999px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+.badge-none,.badge-low{ background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
+.badge-medium{ background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+.badge-high{ background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+
+/* Spinner */
+.stSpinner > div{ border-top-color:var(--brand) !important; }
+</style>
+"""
+
+# B. DARK theme CSS — paste your ORIGINAL <style>…</style> block here
+DARK_CSS = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     * { font-family: 'Inter', sans-serif; }
@@ -177,7 +326,23 @@ st.markdown("""
     .badge-medium { background: rgba(251,191,36,.2); color:#fbbf24; border: 1px solid rgba(251,191,36,.3); }
     .badge-high { background: rgba(239,68,68,.2); color:#f87171; border: 1px solid rgba(239,68,68,.3); }
 </style>
-""", unsafe_allow_html=True)
+"""
+
+# C. Tiny theme switcher (keeps choice in session and injects the right CSS)
+if "theme" not in st.session_state:
+    st.session_state.theme = "Light"  # default to Light; change to "Dark" if you prefer
+
+top_l, top_r = st.columns([0.82, 0.18])
+with top_r:
+    selection = st.selectbox("Theme", ["Light", "Dark"],
+                             index=0 if st.session_state.theme == "Light" else 1)
+    if selection != st.session_state.theme:
+        st.session_state.theme = selection
+        st.rerun()
+
+# Inject the chosen CSS
+st.markdown(LIGHT_CSS if st.session_state.theme == "Light" else DARK_CSS, unsafe_allow_html=True)
+
 
 if "user" not in st.session_state:
     st.session_state.user = None
