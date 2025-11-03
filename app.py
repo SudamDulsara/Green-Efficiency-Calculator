@@ -11,25 +11,6 @@ from utils.auth_utils import login, signup, logout
 from utils.autofix import AutoFixContext
 from utils.validation import validate_actions_report
 
-import os
-try:
-    import streamlit as st
-    def _flatten(prefix, mapping):
-        flat = {}
-        for k, v in mapping.items():
-            key = f"{prefix}_{k}".upper() if prefix else k.upper()
-            if isinstance(v, dict):
-                flat.update(_flatten(key, v))
-            else:
-                flat[key] = str(v)
-        return flat
-
-    if hasattr(st, "secrets") and st.secrets:
-        for k, v in _flatten("", dict(st.secrets)).items():
-            os.environ.setdefault(k, v)
-except Exception:
-    pass
-
 load_dotenv()
 
 st.set_page_config(
