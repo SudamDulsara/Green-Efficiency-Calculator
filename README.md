@@ -16,7 +16,7 @@ This agentic AI system revolves around a workflow that uses multiple agents to p
     pip install -r requirements.txt
 
     -Configurations
-    Create a .env file on the root and set the following keys using your private 
+    Create a .env file on the root and set the following keys using your private values
     OPENAI_API_KEY=
     MODEL_NAME=gpt-4o-mini
     FIREBASE_API_KEY=
