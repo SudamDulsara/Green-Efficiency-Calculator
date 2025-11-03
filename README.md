@@ -5,17 +5,17 @@
 This agentic AI system revolves around a workflow that uses multiple agents to process and provide insights into green energy solutions. The agents handle different tasks like data normalization, efficiency auditing, recommendation composition, impact estimation and policy management. This demonstrates a multi-agentic workflow with the association of an LLM, multiple utitlies and validation schema to generate a viable output for the user to act upon.
 
 ## Quick Start
-    **Requirements**
+    -Requirements
     Python 3.10+
     
-    **Setup virtual environment**
+    -Setup virtual environment
     python -m venv .venv
     source .venv/bin/activate   # or .venv\Scripts\activate on Windows
 
-    **Install dependencies**
+    -Install dependencies
     pip install -r requirements.txt
 
-    **Configurations**
+    -Configurations
     Create a .env file on the root and set the following keys using your private 
     OPENAI_API_KEY=
     MODEL_NAME=gpt-4o-mini
@@ -27,7 +27,7 @@ This agentic AI system revolves around a workflow that uses multiple agents to p
     GOOGLE_CLIENT_ID=
     GOOGLE_CLIENT_SECRET=
 
-    **Run**
+    -Run
     streamlit run app.py
 
 ## Core Workflow of this Project
