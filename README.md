@@ -32,17 +32,17 @@ This agentic AI system revolves around a workflow that uses multiple agents to p
 
 ## Core Workflow of this Project
 
-Intake Agent - Normalizes and validates input data.
-Efficiency Auditor - Identifies inefficiencies via benchmarks + AI reasoning.
-Recommendation Composer - Suggests practical, low-cost green improvements.
-Impact Estimator - Quantifies savings and sustainability gains.
-Policy Agent - Provides the ability for the user to set required policies like budget and payback periods
+- Intake Agent - Normalizes and validates input data.
+- Efficiency Auditor - Identifies inefficiencies via benchmarks + AI reasoning.
+- Recommendation Composer - Suggests practical, low-cost green improvements.
+- Impact Estimator - Quantifies savings and sustainability gains.
+- Policy Agent - Provides the ability for the user to set required policies like budget and payback periods
 
 The workflow orchestrates five specialized agents working in sequence to analyze and optimize energy efficiency. The Intake Agent first validates and normalizes user data such as usage hours, wattage, and tariffs ensuring consistent inputs. The Efficiency Auditor benchmarks this data and identifies inefficiencies using analytical rules and LLM reasoning. The Recommendation Composer then generates prioritized, actionable improvements, while the Impact Estimator quantifies potential savings and payback periods. The Policy Agent enforces user-defined constraints such as budget limits and desired ROI windows. The central workflow coordinates these agents to deliver a structured, actionable output via the user interface.
 
 ## Key Features
--Multi-agent orchestration with AI-assisted reasoning.
--Real-time efficiency auditing and recommendation synthesis.
--Configurable policy agent for budget/payback thresholds.
+- Multi-agent orchestration with AI-assisted reasoning.
+- Real-time efficiency auditing and recommendation synthesis.
+- Configurable policy agent for budget/payback thresholds.
 -Streamlit front-end for interactive user analysis.
 
